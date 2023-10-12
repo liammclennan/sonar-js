@@ -6,35 +6,22 @@ const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { Resource } = require('@opentelemetry/resources');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
 const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
-const { ZipkinExporter } = require('@opentelemetry/exporter-zipkin');
 const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
 
 const EXPORTER = process.env.EXPORTER || '';
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-proto');
 const exporter = new OTLPTraceExporter({
   url: 'http://localhost:5341/ingest/otlp/v1/traces',
-  // headers: {
-  //   foo: 'bar'
-  // },
 });
 
-module.exports = (serviceName) => {
+module.exports.getTracer = (serviceName) => {
   const provider = new NodeTracerProvider({
     resource: new Resource({
       [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
     }),
   });
 
-  // let exporter;
-  // if (EXPORTER.toLowerCase().startsWith('z')) {
-  //   exporter = new ZipkinExporter();
-  // } else {
-  //   exporter = new JaegerExporter();
-  // }
-
   provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-  provider.addSpanProcessor(new SimpleSpanProcessor(new ZipkinExporter()));
 
   // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
   provider.register();
@@ -45,6 +32,25 @@ module.exports = (serviceName) => {
       new HttpInstrumentation(),
     ],
   });
+  
+  const tracer = opentelemetry.trace.getTracer('http-example'); 
 
-  return opentelemetry.trace.getTracer('http-example');
+  return { 
+    tracer,
+    makeSpan: async function makeSpan(message, action, attributes = {}) {
+      const span = tracer.startSpan(message, {
+        attributes,
+      });
+      try {
+        await action(span);
+      } finally {
+        span.end();
+      }
+    },
+    log: function log(message, attributes = {}) {
+      console.log(message);
+      const span = tracer.startSpan(message, { attributes });
+      span.end();
+    }
+  };
 };

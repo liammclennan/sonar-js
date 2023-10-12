@@ -1,65 +1,47 @@
 'use strict';
 
+const port = process.argv[4];
+
 const api = require('@opentelemetry/api');
-const tracer = require('./tracer')('example-http-server');
+const tracer = require('./tracer')(`sonar-js ${port}`);
 const http = require('http');
-
-/** Starts a HTTP server that receives requests on sample server port. */
-function startServer(port) {
-  // Creates a server
-  const server = http.createServer(handleRequest);
-  // Starts the server
-  server.listen(port, (err) => {
-    if (err) {
-      throw err;
-    }
-    console.log(`Node HTTP listening on ${port}`);
-  });
-}
-
-/** A function which handles requests and send response. */
-function handleRequest(request, response) {
-  const currentSpan = api.trace.getActiveSpan();
-  // display traceid in the terminal
-  const traceId = currentSpan.spanContext().traceId;
-  console.log(`traceId: ${traceId}`);
-  const span = tracer.startSpan('handleRequest', {
-    kind: 1, // server
-    attributes: { key: 'value' },
-  });
-  // Annotate our span to capture metadata about the operation
-  span.addEvent('invoking handleRequest');
-
-  const body = [];
-  request.on('error', (err) => console.log(err));
-  request.on('data', (chunk) => body.push(chunk));
-  request.on('end', () => {
-    // deliberately sleeping to mock some action.
-    setTimeout(() => {
-      span.end();
-      response.end('Hello World!');
-    }, 2000);
-  });
-}
-
-//startServer(8080);
-
 const express = require('express')
 const app = express()
-const port = 3001
 
 const [myX, myY] = process.argv.slice(2,4).map((v) => parseInt(v));
-console.log(myX, myY);
+const otherPort = port === 3000 ? 3001 : 3000;
 
-app.get('/ping/:x/:y', ({params: {x,y}}, res) => {
+app.get('/', (req, res) => {
+  sendPing(otherPort, myX, myY, 10000, (response, span, start) => {
+    response.on('end', () => {
+      const elapsedMs = process.hrtime(start)[1] / 1000000;
+      res.send(`<div style="background-color: green; height: ${elapsedMs}px; width: ${elapsedMs}px; border-radius: ${elapsedMs}px"></div>`);
+      span.end();
+    });
+  });
+})
+
+app.get('/ping/:x/:y/:amplitude', ({params: {x,y,amplitude}}, res) => {
   const span = tracer.startSpan(`Received ping from [{x}, {y}]`, {
     kind: 1, // server
-    attributes: { key: 'value', x, y },
+    attributes: { x, y },
   });
   const calculatedDistance = distance([myX,myY], [x,y]);
+  const newAmplitude = amplitude - calculatedDistance;
   span.setAttribute('CalculatedDistance', calculatedDistance);
+  span.setAttribute('NewAmplitude', newAmplitude);
+
   setTimeout(() => {
-    res.send('pong');
+    // if (newAmplitude > 0) {
+    //   sendPing(otherPort, myX, myY, newAmplitude, (response, span, start) => {
+    //     response.on('end', () => {
+    //       const elapsedMs = process.hrtime(start)[1] / 1000000;
+    //       res.sendStatus(200);
+    //       span.end();
+    //     });
+    //   });
+    // }
+    res.sendStatus(200);
     span.end();
   }, calculatedDistance);
 })
@@ -70,4 +52,22 @@ app.listen(port, () => {
 
 function distance([x,y], [x2,y2]) {
   return Math.sqrt(Math.pow(Math.abs(x-x2),2) + Math.pow(Math.abs(y-y2),2));
+}
+
+function sendPing(port, x,y,amplitude, callback) {
+  var start = process.hrtime();
+  tracer.startActiveSpan('Send ping from [{x}, {y}] with amplitude {amplitude}', {
+    attributes: { 
+    x,
+    y,
+    amplitude
+  }}, (span) => {
+    http.get({
+      host: 'localhost',
+      port,
+      path: `/ping/${x}/${y}/${amplitude}`,
+    }, (response) => {
+      callback(response, span, start);
+    });
+  });
 }
