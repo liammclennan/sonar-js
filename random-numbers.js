@@ -5,8 +5,8 @@ const app = express();
 const port = 3333;
 
 app.get('/numbers/:min/:max/:count', ({headers,params: {min,max,count}}, res) => {
+    console.log(headers);
     tracer.startActiveSpan('Generating {count} random numbers between {min} and {max}', {
-        kind: 2, // server
         attributes: {min,max,count},
     }, (span) => {
         res.send(

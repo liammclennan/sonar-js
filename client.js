@@ -1,10 +1,7 @@
 'use strict';
-import { getTracer } from './tracer.js';
-const { tracer,log } = getTracer('PI estimator');
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG);
-import http from 'http';
 
+const { tracer } = require('./tracer.js').getTracer('PI estimator');
+const http = require('http');
 
 tracer.startActiveSpan('Estimating PI', (s) => {
   let {min,max,count} = { min: 0, max: 1000, count: 500};
