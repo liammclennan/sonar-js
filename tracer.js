@@ -37,16 +37,6 @@ module.exports.getTracer = (serviceName) => {
 
   return { 
     tracer,
-    makeSpan: async function makeSpan(message, action, attributes = {}) {
-      const span = tracer.startSpan(message, {
-        attributes,
-      });
-      try {
-        await action(span);
-      } finally {
-        span.end();
-      }
-    },
     log: function log(message, attributes = {}) {
       console.log(message);
       const span = tracer.startSpan(message, { attributes });
