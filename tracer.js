@@ -14,32 +14,26 @@ const exporter = new OTLPTraceExporter({
   url: 'http://localhost:5341/ingest/otlp/v1/traces',
 });
 
-const serviceName = 'aaa';
-
-const provider = new NodeTracerProvider({
-  resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
-  }),
-});
-
-provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-
-// Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
-provider.register();
-
-registerInstrumentations({
-  // // when boostraping with lerna for testing purposes
-  instrumentations: [
-    new HttpInstrumentation(),
-  ],
-});
-
-const tracer = opentelemetry.trace.getTracer('http-example'); 
-
-
-
 module.exports.getTracer = (serviceName) => {
-
+  const provider = new NodeTracerProvider({
+    resource: new Resource({
+      [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
+    }),
+  });
+  
+  provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+  
+  // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
+  provider.register();
+  
+  registerInstrumentations({
+    // // when boostraping with lerna for testing purposes
+    instrumentations: [
+      new HttpInstrumentation(),
+    ],
+  });
+  
+  const tracer = opentelemetry.trace.getTracer('http-example'); 
   return { 
     tracer,
     log: function log(message, attributes = {}) {
