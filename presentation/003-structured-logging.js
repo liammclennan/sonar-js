@@ -1,3 +1,9 @@
+/**
+ * 
+ *  Structured logging
+ * 
+ */
+
 const winston = require('winston');
 const { SeqTransport } = require('@datalust/winston-seq');
 
