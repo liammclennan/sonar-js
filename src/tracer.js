@@ -20,12 +20,12 @@ module.exports.getTracer = (serviceName) => {
       [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
     }),
   });
-
+  
   provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-
+  
   // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
   provider.register();
-
+  
   registerInstrumentations({
     // // when boostraping with lerna for testing purposes
     instrumentations: [
@@ -34,19 +34,8 @@ module.exports.getTracer = (serviceName) => {
   });
   
   const tracer = opentelemetry.trace.getTracer('http-example'); 
-
   return { 
     tracer,
-    makeSpan: async function makeSpan(message, action, attributes = {}) {
-      const span = tracer.startSpan(message, {
-        attributes,
-      });
-      try {
-        await action(span);
-      } finally {
-        span.end();
-      }
-    },
     log: function log(message, attributes = {}) {
       console.log(message);
       const span = tracer.startSpan(message, { attributes });
