@@ -1,5 +1,4 @@
-const {tracer,makeSpan,log} = require('./tracer').getTracer('Circle');
-const api = require('@opentelemetry/api');
+const {tracer} = require('./tracer').getTracer('Circle');
 const express = require('express');
 const app = express();
 app.use(express.json({limit: '50mb'}));
@@ -34,7 +33,6 @@ app.get('/pi/:area/:radius', ({params: {area,radius}}, res) => {
 });
 
 app.listen(port, () => {
-    log('Circle started on {port}', { port });
 })
 
 function countPointsWithinCircle(centre, radius, points) {

@@ -1,14 +1,11 @@
 {
-  "name": "http-example",
+  "name": "microservice-tracing-example",
   "private": true,
-  "version": "0.43.0",
-  "description": "Example of HTTP integration with OpenTelemetry",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Microservices instrumented with HTTP tracing",
+  "main": "microservice.js",
   "scripts": {
-    "zipkin:server": "cross-env EXPORTER=zipkin node ./server.js",
-    "zipkin:client": "cross-env EXPORTER=zipkin node ./client.js",
-    "jaeger:server": "cross-env EXPORTER=jaeger node ./server.js",
-    "jaeger:client": "cross-env EXPORTER=jaeger node ./client.js"
+    "start": "node random-numbers.js & node circle.js & node percent.js & node microservice.js"
   },
   "repository": {
     "type": "git",

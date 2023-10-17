@@ -1,5 +1,4 @@
 const {tracer} = require('./tracer').getTracer('Percentage');
-const api = require('@opentelemetry/api');
 const express = require('express');
 const app = express();
 app.use(express.json());

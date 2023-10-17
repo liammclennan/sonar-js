@@ -1,4 +1,4 @@
-const {tracer,makeSpan,log} = require('./tracer').getTracer('random number service');
+const {tracer} = require('./tracer').getTracer('random number service');
 const api = require('@opentelemetry/api');
 const express = require('express');
 const app = express();
@@ -21,7 +21,6 @@ app.get('/numbers/:min/:max/:count', ({headers,params: {min,max,count}}, res) =>
 });
 
 app.listen(port, () => {
-    log('Random number generator started on {port}', { port });
 })
 
 
