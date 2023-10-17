@@ -5,7 +5,7 @@
   "description": "Microservices instrumented with HTTP tracing",
   "main": "microservice.js",
   "scripts": {
-    "start": "node random-numbers.js & node circle.js & node percent.js & node microservice.js"
+    "start": "npx pm2 start ecosystem.config.js"
   },
   "repository": {
     "type": "git",
