@@ -5,7 +5,6 @@ const app = express();
 const port = 3333;
 
 app.get('/numbers/:min/:max/:count', ({headers,params: {min,max,count}}, res) => {
-    console.log(headers);
     min = parseInt(min);
     max = parseInt(max);
     count = parseInt(count);
@@ -18,8 +17,7 @@ app.get('/numbers/:min/:max/:count', ({headers,params: {min,max,count}}, res) =>
             )
         );
         span.end();
-    });
-    
+    });    
 });
 
 app.listen(port, () => {

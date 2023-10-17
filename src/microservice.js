@@ -1,6 +1,6 @@
 'use strict';
 
-const { tracer } = require('./tracer.js').getTracer('PI');
+const { tracer } = require('./tracer.js').getTracer('Example microservice tracing');
 const http = require('http');
 
 const servers = {
