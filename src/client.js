@@ -3,25 +3,58 @@
 const { tracer } = require('./tracer.js').getTracer('PI');
 const http = require('http');
 
+const servers = {
+  randomNumbers: {
+    host: 'localhost',
+    port: 3333,
+  },
+  circle: {
+    host: 'localhost',
+    port: 3334,
+  },
+  percentage: {
+    host: 'localhost',
+    port: 3335,
+  }
+};
+
 run().then(()=>{});
 
 async function run() {
-  tracer.startActiveSpan('Estimating PI', async (s) => {
-    let {min,max,count} = { min: 0, max: 1000, count: 500};
+  tracer.startActiveSpan('Radomizing points to calculate PI as {estimate}', async (s) => {
+    let {min,max,count,radius} = { min: 0, max: 10000, count: 1000000, radius: 400};
   
-    const xs = await getNumbers(min, max, count);
-    const ys = await getNumbers(min, max, count);
-    const pointsInCircle = await countPointsInCircle(xs, ys, [max / 2, max / 2], 400);
+    const [xs,ys] = [await getNumbers(min, max, count), await getNumbers(min, max, count)];
+    const pointsInCircle = await countPointsInCircle(xs, ys, [max / 2, max / 2], radius);
     const percentage = await calculatePercentage(pointsInCircle, count);
+    const area = (max * max) * (percentage/100);
+    const PIestimate = await calculatePI(area, radius);
+    s.setAttribute('estimate', PIestimate);
     s.end();
+  });
+}
+
+function calculatePI(area, radius) {
+  return new Promise((resolve,reject) => {
+    http.get({
+      ...servers.circle,
+      path: `/pi/${area}/${radius}`,
+    }, (response) => {
+      response.setEncoding('utf8');
+      let rawData = '';
+      response.on('data', (chunk) => { rawData += chunk; });
+      response.on('end', () => {
+        const {PI} = JSON.parse(rawData);
+        resolve(PI);
+      });
+    });
   });
 }
 
 function calculatePercentage(pointsInCircle, totalPoints) {
   return new Promise((resolve,reject) => {
     http.get({
-      host: 'localhost',
-      port: 3335,
+      ...servers.percentage,
       path: `/calculate/${pointsInCircle}/${totalPoints}`,
     }, (response) => {
       response.setEncoding('utf8');
@@ -39,9 +72,8 @@ function countPointsInCircle(xs, ys, centre, radius) {
   return new Promise((resolve,reject) => {
     const postData = JSON.stringify({xs,ys});
     const circleReq = http.request({
-      host: 'localhost',
+      ...servers.circle,
       method: 'POST',
-      port: 3334,
       path: `/count/${centre[0]}/${centre[1]}/${radius}`,
       headers: {
         'Content-Type': 'application/json',
@@ -53,7 +85,6 @@ function countPointsInCircle(xs, ys, centre, radius) {
       response.on('data', (chunk) => { rawData += chunk; });
       response.on('end', () => {
         const count = JSON.parse(rawData);
-        console.log(count);            
         resolve(count.numberOfPointsWithinCircle);
       });
     });
@@ -65,8 +96,7 @@ function countPointsInCircle(xs, ys, centre, radius) {
 function getNumbers(min,max,count) {
   return new Promise((resolve,reject) => {
     http.get({
-      host: 'localhost',
-      port: 3333,
+      ...servers.randomNumbers,
       path: `/numbers/${min}/${max}/${count}`,
     }, (response) => {
       response.setEncoding('utf8');

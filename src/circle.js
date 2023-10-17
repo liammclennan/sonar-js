@@ -2,7 +2,7 @@ const {tracer,makeSpan,log} = require('./tracer').getTracer('Circle');
 const api = require('@opentelemetry/api');
 const express = require('express');
 const app = express();
-app.use(express.json());
+app.use(express.json({limit: '50mb'}));
 const port = 3334;
 
 app.post('/count/:centreX/:centreY/:radius', ({body, params: {centreX, centreY, radius}}, res) => {
@@ -15,6 +15,20 @@ app.post('/count/:centreX/:centreY/:radius', ({body, params: {centreX, centreY, 
         attributes: {centre: [centreX, centreY], radius, count: points.xs.length },
     }, (span) => {
         res.send({numberOfPointsWithinCircle: countPointsWithinCircle([centreX, centreY], radius, points)});
+        span.end();
+    });
+});
+
+app.get('/pi/:area/:radius', ({params: {area,radius}}, res) => {
+    tracer.startActiveSpan('Estimated PI {PI} from a circle with area {area} and radius {radius}', {}, (span) => {
+        area = parseFloat(area);
+        radius = parseInt(radius);
+        span.setAttribute('area', area);
+        span.setAttribute('radius', radius);
+
+        const PI = area / (radius * radius);
+        span.setAttribute('PI', PI);
+        res.send({PI});
         span.end();
     });
 });
