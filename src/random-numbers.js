@@ -1,5 +1,4 @@
 const {tracer} = require('./tracer').getTracer('random number service');
-const api = require('@opentelemetry/api');
 const express = require('express');
 const app = express();
 const port = 3333;
