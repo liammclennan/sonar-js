@@ -18,7 +18,7 @@ const servers = {
   }
 };
 
-setTimeout(run, 1000);
+setTimeout(run, 1);
 
 //                                           ┌───────────────────────┐
 //                                           │                       │
@@ -47,7 +47,7 @@ setTimeout(run, 1000);
 //         │                        │
 //         └────────────────────────┘
 async function run() {
-  tracer.startActiveSpan('Radomizing points to calculate PI as {estimate}', async (s) => {
+  tracer.startActiveSpan('Randomizing points to calculate PI as {estimate}', async (s) => {
     let {min,max,count,radius} = { min: 0, max: 10000, count: 1000000, radius: 400};
   
     const [xs,ys] = [await getNumbers(min, max, count), await getNumbers(min, max, count)];
