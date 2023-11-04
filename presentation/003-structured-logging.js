@@ -14,7 +14,7 @@ const logger = winston.createLogger({
   ),
   transports: [
     new SeqTransport({
-      serverUrl: "http://localhost",
+      serverUrl: "http://localhost:5000",
       onError: (e => { console.error(e) }),
       handleExceptions: true,
       handleRejections: true,
@@ -48,4 +48,5 @@ logger.info("Customer {customer} order a {product}", {
 
 // message interpolation
 // searching
-// aggregating
+// aggregating / analysis
+

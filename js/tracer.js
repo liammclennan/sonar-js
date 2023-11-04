@@ -11,7 +11,7 @@ const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
 const EXPORTER = process.env.EXPORTER || '';
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-proto');
 const exporter = new OTLPTraceExporter({
-  url: 'http://localhost:5341/ingest/otlp/v1/traces',
+  url: 'http://localhost:5000/ingest/otlp/v1/traces',
 });
 
 module.exports.getTracer = (serviceName) => {
